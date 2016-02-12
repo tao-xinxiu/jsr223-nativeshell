@@ -11,6 +11,10 @@ import static jsr223.nativeshell.StringUtils.toEmptyStringIfNull;
 
 public class ExecutableScriptEngine extends AbstractScriptEngine {
 
+    public static final String EXIT_VALUE_BINDING_NAME = "EXIT_VALUE";
+
+    public static final String VARIABLES__BINDING_NAME = "variables";
+
     @Override
     public Object eval(String script, ScriptContext scriptContext) throws ScriptException {
         try {
@@ -38,9 +42,16 @@ public class ExecutableScriptEngine extends AbstractScriptEngine {
             input.interrupt();
 
             int exitValue = process.exitValue();
+
+            if (scriptContext.getBindings(ScriptContext.ENGINE_SCOPE).containsKey(VARIABLES__BINDING_NAME)) {
+                Map<String, Serializable> variables = (Map<String, Serializable>) scriptContext.getBindings(ScriptContext.ENGINE_SCOPE).get(VARIABLES__BINDING_NAME);
+                variables.put(EXIT_VALUE_BINDING_NAME, exitValue);
+            }
+            scriptContext.getBindings(ScriptContext.ENGINE_SCOPE).put(EXIT_VALUE_BINDING_NAME, exitValue);
             if (exitValue != 0) {
                 throw new ScriptException("Command execution failed with exit code " + exitValue);
             }
+
             return exitValue;
         } catch (ScriptException e) {
             throw e;

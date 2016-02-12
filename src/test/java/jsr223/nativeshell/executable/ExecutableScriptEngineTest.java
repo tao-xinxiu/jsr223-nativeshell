@@ -1,26 +1,32 @@
 package jsr223.nativeshell.executable;
 
-import java.io.IOException;
-import java.io.Reader;
-import java.io.StringReader;
-import java.io.StringWriter;
+import jsr223.nativeshell.NativeShellRunner;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import javax.script.Bindings;
 import javax.script.ScriptException;
-
-import jsr223.nativeshell.NativeShellRunner;
-import org.junit.Before;
-import org.junit.Test;
+import java.io.*;
+import java.util.HashMap;
 
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 
 public class ExecutableScriptEngineTest {
 
     private ExecutableScriptEngine scriptEngine;
     private StringWriter scriptOutput;
     private StringWriter scriptError;
+
+    @BeforeClass
+    public static void notOnWindows() {
+        org.junit.Assume.assumeFalse(System.getProperty("os.name").toLowerCase().contains("windows"));
+        // rest of setup.
+    }
 
     @Before
     public void setup() {
@@ -87,6 +93,38 @@ public class ExecutableScriptEngineTest {
         scriptEngine.eval("echo $var", bindings);
 
         assertEquals("\n", scriptOutput.toString());
+    }
+
+    @Test
+    public void exitCodeBindingSuccess() throws Exception {
+        Bindings bindings = scriptEngine.createBindings();
+
+        HashMap<String, Serializable> variables = new HashMap<>();
+        bindings.put(ExecutableScriptEngine.VARIABLES__BINDING_NAME, variables);
+
+        scriptEngine.eval("echo ok", bindings);
+
+        assertEquals(bindings.get(ExecutableScriptEngine.EXIT_VALUE_BINDING_NAME), 0);
+        assertEquals(variables.get(ExecutableScriptEngine.EXIT_VALUE_BINDING_NAME), 0);
+    }
+
+    @Test
+    public void exitCodeBindingError() throws Exception {
+        Bindings bindings = scriptEngine.createBindings();
+
+        HashMap<String, Serializable> variables = new HashMap<>();
+        bindings.put(ExecutableScriptEngine.VARIABLES__BINDING_NAME, variables);
+
+        boolean exceptionThrown = false;
+        try {
+            scriptEngine.eval("pprijbjhbqjhrj", bindings);
+
+        } catch (Exception e) {
+            exceptionThrown = true;
+        }
+        assertTrue(exceptionThrown);
+        assertNotEquals(bindings.get(ExecutableScriptEngine.EXIT_VALUE_BINDING_NAME), 0);
+        assertNotEquals(variables.get(ExecutableScriptEngine.EXIT_VALUE_BINDING_NAME), 0);
     }
 
     @Test
