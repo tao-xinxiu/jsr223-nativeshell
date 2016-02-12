@@ -2,6 +2,7 @@ package jsr223.nativeshell.executable;
 
 import jsr223.nativeshell.NativeShellRunner;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import javax.script.Bindings;
@@ -20,6 +21,12 @@ public class ExecutableScriptEngineTest {
     private ExecutableScriptEngine scriptEngine;
     private StringWriter scriptOutput;
     private StringWriter scriptError;
+
+    @BeforeClass
+    public static void notOnWindows() {
+        org.junit.Assume.assumeFalse(System.getProperty("os.name").toLowerCase().contains("windows"));
+        // rest of setup.
+    }
 
     @Before
     public void setup() {
