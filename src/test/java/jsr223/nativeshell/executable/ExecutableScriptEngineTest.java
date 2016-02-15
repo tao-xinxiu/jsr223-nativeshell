@@ -1,6 +1,7 @@
 package jsr223.nativeshell.executable;
 
 import jsr223.nativeshell.NativeShellRunner;
+import jsr223.nativeshell.NativeShellScriptEngine;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -12,9 +13,7 @@ import java.util.HashMap;
 
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class ExecutableScriptEngineTest {
 
@@ -100,12 +99,12 @@ public class ExecutableScriptEngineTest {
         Bindings bindings = scriptEngine.createBindings();
 
         HashMap<String, Serializable> variables = new HashMap<>();
-        bindings.put(ExecutableScriptEngine.VARIABLES__BINDING_NAME, variables);
+        bindings.put(NativeShellScriptEngine.VARIABLES_BINDING_NAME, variables);
 
         scriptEngine.eval("echo ok", bindings);
 
-        assertEquals(bindings.get(ExecutableScriptEngine.EXIT_VALUE_BINDING_NAME), 0);
-        assertEquals(variables.get(ExecutableScriptEngine.EXIT_VALUE_BINDING_NAME), 0);
+        assertEquals(bindings.get(NativeShellScriptEngine.EXIT_VALUE_BINDING_NAME), 0);
+        assertEquals(variables.get(NativeShellScriptEngine.EXIT_VALUE_BINDING_NAME), 0);
     }
 
     @Test
@@ -113,7 +112,7 @@ public class ExecutableScriptEngineTest {
         Bindings bindings = scriptEngine.createBindings();
 
         HashMap<String, Serializable> variables = new HashMap<>();
-        bindings.put(ExecutableScriptEngine.VARIABLES__BINDING_NAME, variables);
+        bindings.put(NativeShellScriptEngine.VARIABLES_BINDING_NAME, variables);
 
         boolean exceptionThrown = false;
         try {
@@ -123,8 +122,8 @@ public class ExecutableScriptEngineTest {
             exceptionThrown = true;
         }
         assertTrue(exceptionThrown);
-        assertNotEquals(bindings.get(ExecutableScriptEngine.EXIT_VALUE_BINDING_NAME), 0);
-        assertNotEquals(variables.get(ExecutableScriptEngine.EXIT_VALUE_BINDING_NAME), 0);
+        assertNotEquals(bindings.get(NativeShellScriptEngine.EXIT_VALUE_BINDING_NAME), 0);
+        assertNotEquals(variables.get(NativeShellScriptEngine.EXIT_VALUE_BINDING_NAME), 0);
     }
 
     @Test
