@@ -3,6 +3,7 @@ package jsr223.nativeshell.cmd;
 import jsr223.nativeshell.NativeShellRunner;
 import jsr223.nativeshell.NativeShellScriptEngine;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -24,9 +25,9 @@ public class CmdScriptEngineTest {
 
     private static String nl = System.lineSeparator();
 
-    @Before
-    public void runOnlyOnWindows() {
-        assumeTrue(System.getProperty("os.name").contains("Windows"));
+    @BeforeClass
+    public static void runOnlyOnWindows() {
+        assumeTrue(System.getProperty("os.name").toLowerCase().contains("windows"));
     }
 
     @Before
@@ -43,6 +44,7 @@ public class CmdScriptEngineTest {
         Integer returnCode = (Integer) scriptEngine.eval("echo hello");
 
         assertEquals(NativeShellRunner.RETURN_CODE_OK, returnCode);
+        assertEquals(NativeShellRunner.RETURN_CODE_OK, scriptEngine.get(NativeShellScriptEngine.EXIT_VALUE_BINDING_NAME));
         assertEquals("hello" + nl, scriptOutput.toString());
     }
 
@@ -57,6 +59,7 @@ public class CmdScriptEngineTest {
         }
         assertTrue(exceptionThrown);
         assertNull(returnCode);
+        assertNotEquals(NativeShellRunner.RETURN_CODE_OK, scriptEngine.get(NativeShellScriptEngine.EXIT_VALUE_BINDING_NAME));
         assertTrue(scriptError.toString().length() > 0);
         // Disabled the following check as it is language-specific
         //assertEquals("cmd: nonexistingcommandwhatsoever: command not found" + nl, scriptError.toString());
@@ -73,6 +76,7 @@ public class CmdScriptEngineTest {
         Integer returnCode = (Integer) bashScriptEngine.eval("echo %string% %integer% %float%");
 
         assertEquals(NativeShellRunner.RETURN_CODE_OK, returnCode);
+        assertEquals(NativeShellRunner.RETURN_CODE_OK, bashScriptEngine.get(NativeShellScriptEngine.EXIT_VALUE_BINDING_NAME));
         assertEquals("aString 42 42.0" + nl, scriptOutput.toString());
     }
 
@@ -130,6 +134,7 @@ public class CmdScriptEngineTest {
         }
 
         assertEquals(NativeShellRunner.RETURN_CODE_OK, bashScriptEngine.eval(largeScript));
+        assertEquals(NativeShellRunner.RETURN_CODE_OK, bashScriptEngine.get(NativeShellScriptEngine.EXIT_VALUE_BINDING_NAME));
         assertTrue(scriptOutput.toString().contains("aString4999"));
     }
 }

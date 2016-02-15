@@ -1,15 +1,15 @@
 package jsr223.nativeshell;
 
+import javax.script.*;
 import java.io.Reader;
-
-import javax.script.AbstractScriptEngine;
-import javax.script.Bindings;
-import javax.script.ScriptContext;
-import javax.script.ScriptEngineFactory;
-import javax.script.ScriptException;
-import javax.script.SimpleBindings;
+import java.io.Serializable;
+import java.util.Map;
 
 public class NativeShellScriptEngine extends AbstractScriptEngine {
+
+    public static final String EXIT_VALUE_BINDING_NAME = "EXIT_VALUE";
+
+    public static final String VARIABLES_BINDING_NAME = "variables";
 
     private NativeShell nativeShell;
 
@@ -20,6 +20,11 @@ public class NativeShellScriptEngine extends AbstractScriptEngine {
     @Override
     public Object eval(String script, ScriptContext context) throws ScriptException {
         int exitValue = new NativeShellRunner(nativeShell).run(script, context);
+        if (context.getBindings(ScriptContext.ENGINE_SCOPE).containsKey(VARIABLES_BINDING_NAME)) {
+            Map<String, Serializable> variables = (Map<String, Serializable>) context.getBindings(ScriptContext.ENGINE_SCOPE).get(VARIABLES_BINDING_NAME);
+            variables.put(EXIT_VALUE_BINDING_NAME, exitValue);
+        }
+        context.getBindings(ScriptContext.ENGINE_SCOPE).put(EXIT_VALUE_BINDING_NAME, exitValue);
         if (exitValue != 0) {
             throw new ScriptException("Script failed with exit code " + exitValue);
         }
