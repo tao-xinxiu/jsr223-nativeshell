@@ -79,8 +79,9 @@ public class NativeShellRunner {
     }
 
     private static int run(ProcessBuilder processBuilder, Reader processInput, Writer processOutput, Writer processError) {
+        Process process = null;
         try {
-            final Process process = processBuilder.start();
+            process = processBuilder.start();
             Thread input = writeProcessInput(process.getOutputStream(), processInput);
             Thread output = readProcessOutput(process.getInputStream(), processOutput);
             Thread error = readProcessOutput(process.getErrorStream(), processError);
@@ -95,6 +96,20 @@ public class NativeShellRunner {
             input.interrupt(); // TODO better thing to do?
 
             return process.exitValue();
+        } catch (InterruptedException interruptedException) {
+            destroyProcessAndWaitForItToBeDestroyed(process);
+            // Forward Interrupted Exception
+            throw new RuntimeException(interruptedException);
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static void destroyProcessAndWaitForItToBeDestroyed(Process process) {
+        try {
+            process.destroy();
+            process.waitFor();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
