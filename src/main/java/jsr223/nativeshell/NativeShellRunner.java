@@ -80,6 +80,7 @@ public class NativeShellRunner {
 
     private static int run(ProcessBuilder processBuilder, Reader processInput, Writer processOutput, Writer processError) {
         Process process = null;
+        Thread shutdownHook = null;
         try {
             process = processBuilder.start();
             Thread input = writeProcessInput(process.getOutputStream(), processInput);
@@ -89,6 +90,15 @@ public class NativeShellRunner {
             input.start();
             output.start();
             error.start();
+
+            final Process shutdownHookProcessReference = process;
+            shutdownHook = new Thread() {
+                @Override
+                public void run() {
+                    destroyProcessAndWaitForItToBeDestroyed(shutdownHookProcessReference);
+                }
+            };
+            Runtime.getRuntime().addShutdownHook(shutdownHook);
 
             process.waitFor();
             output.join();
@@ -103,6 +113,8 @@ public class NativeShellRunner {
         }
         catch (Exception e) {
             throw new RuntimeException(e);
+        } finally {
+            Runtime.getRuntime().removeShutdownHook(shutdownHook);
         }
     }
 
