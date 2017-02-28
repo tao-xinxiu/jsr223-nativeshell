@@ -79,8 +79,10 @@ public class NativeShellRunner {
     }
 
     private static int run(ProcessBuilder processBuilder, Reader processInput, Writer processOutput, Writer processError) {
+        Process process = null;
+        Thread shutdownHook = null;
         try {
-            final Process process = processBuilder.start();
+            process = processBuilder.start();
             Thread input = writeProcessInput(process.getOutputStream(), processInput);
             Thread output = readProcessOutput(process.getInputStream(), processOutput);
             Thread error = readProcessOutput(process.getErrorStream(), processError);
@@ -89,12 +91,37 @@ public class NativeShellRunner {
             output.start();
             error.start();
 
+            final Process shutdownHookProcessReference = process;
+            shutdownHook = new Thread() {
+                @Override
+                public void run() {
+                    destroyProcessAndWaitForItToBeDestroyed(shutdownHookProcessReference);
+                }
+            };
+            Runtime.getRuntime().addShutdownHook(shutdownHook);
+
             process.waitFor();
             output.join();
             error.join();
             input.interrupt(); // TODO better thing to do?
 
             return process.exitValue();
+        } catch (InterruptedException interruptedException) {
+            destroyProcessAndWaitForItToBeDestroyed(process);
+            // Forward Interrupted Exception
+            throw new RuntimeException(interruptedException);
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            Runtime.getRuntime().removeShutdownHook(shutdownHook);
+        }
+    }
+
+    private static void destroyProcessAndWaitForItToBeDestroyed(Process process) {
+        try {
+            process.destroy();
+            process.waitFor();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

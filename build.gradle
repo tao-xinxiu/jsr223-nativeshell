@@ -1,12 +1,19 @@
 apply plugin: 'java'
 apply plugin: 'maven'
 
-version = '0.4.1'
-group = 'jsr223'
-
 sourceCompatibility = 1.7
 
-defaultTasks 'jar'
+// Configure the maven repository deployment
+install {
+    repositories.mavenInstaller {
+        // Set the version
+        pom.version = project.version
+        // Set the group/namespace for the maven repository deployment.
+        pom.groupId = project.groupId
+        // Give the artifact a 'base name' (The version is added to the 'base name')
+        pom.artifactId = project.artifactId
+    }
+}
 
 repositories {
     jcenter()
@@ -17,9 +24,20 @@ dependencies {
     testCompile group: 'commons-io', name: 'commons-io', version: '1.4'
 }
 
+
+// Upload the archives to the nexus repository. For execution, that needs to have
+// the username and password set in the command line by -DnexusUsername=[username]
+// and -DnexusPassword=[password]
 uploadArchives {
     repositories {
         mavenDeployer {
+            // Set the version
+            pom.version = project.version
+            // Set the group/namespace for the maven repository deployment.
+            pom.groupId = project.groupId
+            // Give the artifact a 'base name' (The version is added to the 'base name')
+            pom.artifactId = project.artifactId
+
             snapshotRepository(url: "http://repository.activeeon.com/content/repositories/snapshots/") {
                 authentication(userName: "${System.getProperty('nexusUsername')}",
                         password: "${System.getProperty('nexusPassword')}")
