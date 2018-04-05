@@ -19,6 +19,7 @@ import javax.script.ScriptContext;
 import static jsr223.nativeshell.IOUtils.pipe;
 import static jsr223.nativeshell.StringUtils.toEmptyStringIfNull;
 
+
 public class NativeShellRunner {
 
     public static final Integer RETURN_CODE_OK = 0;
@@ -57,7 +58,10 @@ public class NativeShellRunner {
 
         addBindingsAsEnvironmentVariables(scriptContext, processBuilder);
 
-        return run(processBuilder, scriptContext.getReader(), scriptContext.getWriter(), scriptContext.getErrorWriter());
+        return run(processBuilder,
+                   scriptContext.getReader(),
+                   scriptContext.getWriter(),
+                   scriptContext.getErrorWriter());
     }
 
     private String runAndGetOutput(String command) {
@@ -78,7 +82,8 @@ public class NativeShellRunner {
         return processOutput.toString();
     }
 
-    private static int run(ProcessBuilder processBuilder, Reader processInput, Writer processOutput, Writer processError) {
+    private static int run(ProcessBuilder processBuilder, Reader processInput, Writer processOutput,
+            Writer processError) {
         Process process = null;
         Thread shutdownHook = null;
         try {
@@ -110,11 +115,12 @@ public class NativeShellRunner {
             destroyProcessAndWaitForItToBeDestroyed(process);
             // Forward Interrupted Exception
             throw new RuntimeException(interruptedException);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {
-            Runtime.getRuntime().removeShutdownHook(shutdownHook);
+            if (shutdownHook != null) {
+                Runtime.getRuntime().removeShutdownHook(shutdownHook);
+            }
         }
     }
 
@@ -145,20 +151,25 @@ public class NativeShellRunner {
         }
     }
 
-    private void addMapBindingAsEnvironmentVariable(String bindingKey, Map<?, ?> bindingValue, Map<String, String> environment) {
+    private void addMapBindingAsEnvironmentVariable(String bindingKey, Map<?, ?> bindingValue,
+            Map<String, String> environment) {
         for (Map.Entry<?, ?> entry : ((Map<?, ?>) bindingValue).entrySet()) {
-            environment.put(bindingKey + "_" + entry.getKey(), (entry.getValue() == null ? "" : toEmptyStringIfNull(entry.getValue())));
+            environment.put(bindingKey + "_" + entry.getKey(),
+                            (entry.getValue() == null ? "" : toEmptyStringIfNull(entry.getValue())));
         }
     }
 
-    private void addCollectionBindingAsEnvironmentVariable(String bindingKey, Collection bindingValue, Map<String, String> environment) {
+    private void addCollectionBindingAsEnvironmentVariable(String bindingKey, Collection bindingValue,
+            Map<String, String> environment) {
         Object[] bindingValueAsArray = bindingValue.toArray();
         addArrayBindingAsEnvironmentVariable(bindingKey, bindingValueAsArray, environment);
     }
 
-    private void addArrayBindingAsEnvironmentVariable(String bindingKey, Object[] bindingValue, Map<String, String> environment) {
+    private void addArrayBindingAsEnvironmentVariable(String bindingKey, Object[] bindingValue,
+            Map<String, String> environment) {
         for (int i = 0; i < bindingValue.length; i++) {
-            environment.put(bindingKey + "_" + i, (bindingValue[i] == null ? "" : toEmptyStringIfNull(bindingValue[i].toString())));
+            environment.put(bindingKey + "_" + i,
+                            (bindingValue[i] == null ? "" : toEmptyStringIfNull(bindingValue[i].toString())));
         }
     }
 
@@ -193,6 +204,7 @@ public class NativeShellRunner {
     private File commandAsTemporaryFile(String command) {
         try {
             File commandAsFile = File.createTempFile("jsr223nativeshell-", nativeShell.getFileExtension());
+            commandAsFile.setExecutable(true);
             IOUtils.writeStringToFile(command, commandAsFile);
             return commandAsFile;
         } catch (IOException e) {
