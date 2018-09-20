@@ -30,19 +30,39 @@ public class NativeShellRunner {
         this.nativeShell = nativeShell;
     }
 
+    private boolean isVersionCheckEnabled() {
+        String versionCheckProperty = System.getProperty(NativeShellScriptEngine.ENABLE_VERSION_PROPERTY_NAME);
+        if (versionCheckProperty != null) {
+            try {
+                return Boolean.parseBoolean(versionCheckProperty);
+            } catch (Exception e) {
+                return false;
+            }
+        }
+        return false;
+    }
+
     public String getInstalledVersion() {
-        try {
-            return runAndGetOutput(nativeShell.getInstalledVersionCommand());
-        } catch (Throwable e) {
-            return "Could not determine version";
+        if (isVersionCheckEnabled()) {
+            try {
+                return runAndGetOutput(nativeShell.getInstalledVersionCommand());
+            } catch (Throwable e) {
+                return "Could not determine version";
+            }
+        } else {
+            return NativeShellScriptEngine.DEFAULT_VERSION;
         }
     }
 
     public String getMajorVersion() {
-        try {
-            return runAndGetOutput(nativeShell.getMajorVersionCommand());
-        } catch (Throwable e) {
-            return "Could not determine version";
+        if (isVersionCheckEnabled()) {
+            try {
+                return runAndGetOutput(nativeShell.getMajorVersionCommand());
+            } catch (Throwable e) {
+                return "Could not determine version";
+            }
+        } else {
+            return NativeShellScriptEngine.DEFAULT_MAJOR_VERSION;
         }
     }
 

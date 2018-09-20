@@ -7,6 +7,12 @@ import java.util.Map;
 
 public class NativeShellScriptEngine extends AbstractScriptEngine {
 
+    public static final String ENABLE_VERSION_PROPERTY_NAME = "jsr223.nativeshell.enableVersionCheck";
+
+    public static final String DEFAULT_VERSION = "1.0.0";
+
+    public static final String DEFAULT_MAJOR_VERSION = "1";
+
     public static final String EXIT_VALUE_BINDING_NAME = "EXIT_VALUE";
 
     public static final String VARIABLES_BINDING_NAME = "variables";
