@@ -1,22 +1,29 @@
 package jsr223.nativeshell.bash;
 
-import jsr223.nativeshell.NativeShellRunner;
-import jsr223.nativeshell.NativeShellScriptEngine;
+import static java.util.Arrays.asList;
 
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineFactory;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static java.util.Arrays.asList;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineFactory;
+
+import jsr223.nativeshell.NativeShellRunner;
+import jsr223.nativeshell.NativeShellScriptEngine;
+
 
 public class BashScriptEngineFactory implements ScriptEngineFactory {
 
     private static final String NAME = "bash";
+
     private static final String ENGINE = "Bash interpreter";
+
     private static final String ENGINE_VERSION = new NativeShellRunner(new Bash()).getInstalledVersion();
+
     private static final String LANGUAGE = "Bash";
+
     private static final String LANGUAGE_VERSION = new NativeShellRunner(new Bash()).getMajorVersion();
 
     private static final Map<String, Object> parameters = new HashMap<String, Object>();
@@ -41,17 +48,17 @@ public class BashScriptEngineFactory implements ScriptEngineFactory {
 
     @Override
     public List<String> getExtensions() {
-        return asList("sh", "bash");
+        return Collections.singletonList("bash");
     }
 
     @Override
     public List<String> getMimeTypes() {
-        return asList("application/x-sh", "application/x-bash");
+        return Collections.singletonList("application/x-bash");
     }
 
     @Override
     public List<String> getNames() {
-        return asList("bash", "sh", "Bash");
+        return asList("bash", "Bash");
     }
 
     @Override

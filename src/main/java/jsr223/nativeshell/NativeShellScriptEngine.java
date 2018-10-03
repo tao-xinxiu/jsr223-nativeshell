@@ -1,9 +1,11 @@
 package jsr223.nativeshell;
 
-import javax.script.*;
 import java.io.Reader;
 import java.io.Serializable;
 import java.util.Map;
+
+import javax.script.*;
+
 
 public class NativeShellScriptEngine extends AbstractScriptEngine {
 
@@ -27,7 +29,8 @@ public class NativeShellScriptEngine extends AbstractScriptEngine {
     public Object eval(String script, ScriptContext context) throws ScriptException {
         int exitValue = new NativeShellRunner(nativeShell).run(script, context);
         if (context.getBindings(ScriptContext.ENGINE_SCOPE).containsKey(VARIABLES_BINDING_NAME)) {
-            Map<String, Serializable> variables = (Map<String, Serializable>) context.getBindings(ScriptContext.ENGINE_SCOPE).get(VARIABLES_BINDING_NAME);
+            Map<String, Serializable> variables = (Map<String, Serializable>) context.getBindings(ScriptContext.ENGINE_SCOPE)
+                                                                                     .get(VARIABLES_BINDING_NAME);
             variables.put(EXIT_VALUE_BINDING_NAME, exitValue);
         }
         context.getBindings(ScriptContext.ENGINE_SCOPE).put(EXIT_VALUE_BINDING_NAME, exitValue);

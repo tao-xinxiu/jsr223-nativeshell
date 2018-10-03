@@ -1,5 +1,8 @@
 package jsr223.nativeshell;
 
+import static jsr223.nativeshell.IOUtils.pipe;
+import static jsr223.nativeshell.StringUtils.toEmptyStringIfNull;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -15,9 +18,6 @@ import java.util.Collection;
 import java.util.Map;
 
 import javax.script.ScriptContext;
-
-import static jsr223.nativeshell.IOUtils.pipe;
-import static jsr223.nativeshell.StringUtils.toEmptyStringIfNull;
 
 
 public class NativeShellRunner {
@@ -67,7 +67,7 @@ public class NativeShellRunner {
     }
 
     public int run(String command, ScriptContext scriptContext) {
-        File commandAsTemporaryFile = commandAsTemporaryFile(command);
+        File commandAsTemporaryFile = commandAsTemporaryFile(command.trim());
         int exitValue = run(commandAsTemporaryFile, scriptContext);
         commandAsTemporaryFile.delete();
         return exitValue;

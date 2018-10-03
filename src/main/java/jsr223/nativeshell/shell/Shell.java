@@ -1,4 +1,4 @@
-package jsr223.nativeshell.bash;
+package jsr223.nativeshell.shell;
 
 import java.io.File;
 
@@ -7,33 +7,34 @@ import javax.script.ScriptEngineFactory;
 import jsr223.nativeshell.NativeShell;
 
 
-public class Bash implements NativeShell {
-
+public class Shell implements NativeShell {
+    @Override
     public ProcessBuilder createProcess(File commandAsFile) {
-        return new ProcessBuilder("bash", commandAsFile.getAbsolutePath());
+        return new ProcessBuilder(commandAsFile.getAbsolutePath());
     }
 
+    @Override
     public ProcessBuilder createProcess(String command) {
-        return new ProcessBuilder("bash", "-c", command);
+        throw new RuntimeException("One line shell sctipt is not supported: shebang nodation required");
     }
 
     @Override
     public String getInstalledVersionCommand() {
-        return "echo -n $BASH_VERSION";
+        return "1.0";
     }
 
     @Override
     public String getMajorVersionCommand() {
-        return "echo -n $BASH_VERSINFO";
+        return "1.0";
     }
 
     @Override
     public ScriptEngineFactory getScriptEngineFactory() {
-        return new BashScriptEngineFactory();
+        return new ShellEngineFactory();
     }
 
     @Override
     public String getFileExtension() {
-        return ".bash";
+        return ".sh";
     }
 }

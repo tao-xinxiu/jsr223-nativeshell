@@ -1,24 +1,29 @@
 package jsr223.nativeshell.executable;
 
-import jsr223.nativeshell.NativeShellRunner;
-import jsr223.nativeshell.NativeShellScriptEngine;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import javax.script.Bindings;
-import javax.script.ScriptException;
-import java.io.*;
-import java.util.HashMap;
-
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.junit.Assert.*;
 
+import java.io.*;
+import java.util.HashMap;
+
+import javax.script.Bindings;
+import javax.script.ScriptException;
+
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import jsr223.nativeshell.NativeShellRunner;
+import jsr223.nativeshell.NativeShellScriptEngine;
+
+
 public class ExecutableScriptEngineTest {
 
     private ExecutableScriptEngine scriptEngine;
+
     private StringWriter scriptOutput;
+
     private StringWriter scriptError;
 
     @BeforeClass
@@ -148,7 +153,7 @@ public class ExecutableScriptEngineTest {
     @Test
     public void collection_bindings() throws Exception {
         Bindings bindings = scriptEngine.createBindings();
-        bindings.put("array", new String[]{"one", "two"});
+        bindings.put("array", new String[] { "one", "two" });
         bindings.put("long_array", "a a a a a a a a a a b".split(" "));
         bindings.put("list", singletonList("l1"));
         bindings.put("map", singletonMap("key", "value"));

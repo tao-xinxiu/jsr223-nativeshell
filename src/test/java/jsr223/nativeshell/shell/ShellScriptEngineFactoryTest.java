@@ -1,4 +1,4 @@
-package jsr223.nativeshell.bash;
+package jsr223.nativeshell.shell;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -9,20 +9,20 @@ import javax.script.ScriptEngineManager;
 import org.junit.Test;
 
 
-public class BashScriptEngineFactoryTest {
+public class ShellScriptEngineFactoryTest {
 
     @Test
-    public void testBashScriptEngineIsFound() {
+    public void testShellScriptEngineIsFound() {
         ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
 
-        assertNotNull(scriptEngineManager.getEngineByExtension("bash"));
-        assertNotNull(scriptEngineManager.getEngineByName("bash"));
-        assertEquals("bash", scriptEngineManager.getEngineByMimeType("application/x-bash").getFactory().getEngineName());
+        assertNotNull(scriptEngineManager.getEngineByExtension("sh"));
+        assertNotNull(scriptEngineManager.getEngineByName("shell"));
+        assertEquals("shell", scriptEngineManager.getEngineByMimeType("application/x-sh").getFactory().getEngineName());
     }
 
     @Test
     public void testBashScriptEngineVersions() {
-        ScriptEngine bashScriptEngine = new ScriptEngineManager().getEngineByExtension("bash");
+        ScriptEngine bashScriptEngine = new ScriptEngineManager().getEngineByExtension("sh");
 
         assertNotNull(bashScriptEngine.getFactory().getEngineVersion());
         assertNotNull(bashScriptEngine.getFactory().getLanguageVersion());
