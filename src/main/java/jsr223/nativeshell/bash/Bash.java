@@ -9,10 +9,12 @@ import jsr223.nativeshell.NativeShell;
 
 public class Bash implements NativeShell {
 
-    public ProcessBuilder createProcess(File commandAsFile) {
+    @Override
+    public ProcessBuilder createProcess(File commandAsFile)  {
         return new ProcessBuilder("bash", commandAsFile.getAbsolutePath());
     }
 
+    @Override
     public ProcessBuilder createProcess(String command) {
         return new ProcessBuilder("bash", "-c", command);
     }

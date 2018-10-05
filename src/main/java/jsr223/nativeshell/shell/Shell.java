@@ -1,15 +1,43 @@
 package jsr223.nativeshell.shell;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 
 import javax.script.ScriptEngineFactory;
+import javax.script.ScriptException;
 
 import jsr223.nativeshell.NativeShell;
 
 
 public class Shell implements NativeShell {
+
+    private static final String SHEBANG_PREFIX = "#!";
+
     @Override
-    public ProcessBuilder createProcess(File commandAsFile) {
+    public ProcessBuilder createProcess(File commandAsFile) throws ScriptException {
+        try (FileReader fileReader = new FileReader(commandAsFile);
+             BufferedReader reader = new BufferedReader(fileReader)) {
+            final String shebangLine = reader.readLine();
+            if( shebangLine.startsWith(SHEBANG_PREFIX) && shebangLine.length() > SHEBANG_PREFIX.length()) {
+                final String pathToInterpreter = shebangLine.substring(SHEBANG_PREFIX.length());
+                final File interpreter = new File(pathToInterpreter);
+                if (!interpreter.exists()) {
+                    throw new ScriptException(String.format("Interpreter '%s' does not exist on the node.", pathToInterpreter));
+                } else if (interpreter.isDirectory()){
+                    throw new ScriptException(String.format("Path '%s' points to the directory.", pathToInterpreter));
+                } else if (!interpreter.canExecute()){
+                    throw new ScriptException(String.format("Interpreter '%s' cannot be executed.", pathToInterpreter));
+                }
+            } else {
+                throw new ScriptException("Incorrect shebang notation: " + shebangLine);
+            }
+
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         return new ProcessBuilder(commandAsFile.getAbsolutePath());
     }
 
