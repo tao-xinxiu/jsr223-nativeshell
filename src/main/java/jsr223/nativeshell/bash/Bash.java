@@ -1,16 +1,20 @@
 package jsr223.nativeshell.bash;
 
-import jsr223.nativeshell.NativeShell;
+import java.io.File;
 
 import javax.script.ScriptEngineFactory;
-import java.io.File;
+
+import jsr223.nativeshell.NativeShell;
+
 
 public class Bash implements NativeShell {
 
-    public ProcessBuilder createProcess(File commandAsFile) {
+    @Override
+    public ProcessBuilder createProcess(File commandAsFile)  {
         return new ProcessBuilder("bash", commandAsFile.getAbsolutePath());
     }
 
+    @Override
     public ProcessBuilder createProcess(String command) {
         return new ProcessBuilder("bash", "-c", command);
     }
@@ -32,6 +36,6 @@ public class Bash implements NativeShell {
 
     @Override
     public String getFileExtension() {
-        return ".sh";
+        return ".bash";
     }
 }

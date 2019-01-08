@@ -1,7 +1,8 @@
-package jsr223.nativeshell.cmd;
+package jsr223.nativeshell.shell;
 
 import static java.util.Arrays.asList;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,18 +13,17 @@ import javax.script.ScriptEngineFactory;
 import jsr223.nativeshell.NativeShellRunner;
 import jsr223.nativeshell.NativeShellScriptEngine;
 
+public class ShellEngineFactory implements ScriptEngineFactory {
 
-public class CmdScriptEngineFactory implements ScriptEngineFactory {
+    private static final String NAME = "shell";
 
-    private static final String NAME = "cmd";
+    private static final String ENGINE = "Shell interpreter";
 
-    private static final String ENGINE = "Cmd interpreter";
+    private static final String ENGINE_VERSION = new NativeShellRunner(new Shell()).getInstalledVersion();
 
-    private static final String ENGINE_VERSION = new NativeShellRunner(new Cmd()).getInstalledVersion();
+    private static final String LANGUAGE = "Shell";
 
-    private static final String LANGUAGE = "Cmd";
-
-    private static final String LANGUAGE_VERSION = new NativeShellRunner(new Cmd()).getMajorVersion();
+    private static final String LANGUAGE_VERSION = new NativeShellRunner(new Shell()).getMajorVersion();
 
     private static final Map<String, Object> parameters = new HashMap<String, Object>();
 
@@ -37,7 +37,7 @@ public class CmdScriptEngineFactory implements ScriptEngineFactory {
 
     @Override
     public String getEngineName() {
-        return NAME;
+        return "shell";
     }
 
     @Override
@@ -47,22 +47,17 @@ public class CmdScriptEngineFactory implements ScriptEngineFactory {
 
     @Override
     public List<String> getExtensions() {
-        return asList("bat");
+        return Collections.singletonList("sh");
     }
 
     @Override
     public List<String> getMimeTypes() {
-        return asList("application/x-cmd",
-                      "application/x-bat",
-                      "application/bat",
-                      "application/x-msdos-program",
-                      "application/textedit",
-                      "application/octet-stream");
+        return Collections.singletonList("application/x-sh");
     }
 
     @Override
     public List<String> getNames() {
-        return asList("cmd", "bat", "Cmd", "Bat");
+        return asList("shell", "Shell");
     }
 
     @Override
@@ -81,30 +76,22 @@ public class CmdScriptEngineFactory implements ScriptEngineFactory {
     }
 
     @Override
-    public String getMethodCallSyntax(String obj, String m, String... args) {
-        String methodCall = m + " ";
-        for (String arg : args) {
-            methodCall += arg + " ";
-        }
-        return methodCall;
+    public String getMethodCallSyntax(String s, String s1, String... strings) {
+        return null;
     }
 
     @Override
-    public String getOutputStatement(String toDisplay) {
-        return "echo " + toDisplay;
+    public String getOutputStatement(String s) {
+        return null;
     }
 
     @Override
-    public String getProgram(String... statements) {
-        String program = "";
-        for (String statement : statements) {
-            program += statement + "\n";
-        }
-        return program;
+    public String getProgram(String... strings) {
+        return null;
     }
 
     @Override
     public ScriptEngine getScriptEngine() {
-        return new NativeShellScriptEngine(new Cmd());
+        return new NativeShellScriptEngine(new Shell());
     }
 }

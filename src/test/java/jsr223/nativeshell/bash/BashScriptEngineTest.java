@@ -1,26 +1,31 @@
 package jsr223.nativeshell.bash;
 
-import jsr223.nativeshell.NativeShellRunner;
-import jsr223.nativeshell.NativeShellScriptEngine;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
-
-import javax.script.*;
-import java.io.StringReader;
-import java.io.StringWriter;
-
 import static java.util.Arrays.asList;
 import static java.util.Collections.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import java.io.StringReader;
+import java.io.StringWriter;
+
+import javax.script.*;
+
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
+
+import jsr223.nativeshell.NativeShellRunner;
+import jsr223.nativeshell.NativeShellScriptEngine;
+
+
 public class BashScriptEngineTest {
 
     private NativeShellScriptEngine scriptEngine;
+
     private StringWriter scriptOutput;
+
     private StringWriter scriptError;
 
     @BeforeClass
@@ -67,20 +72,22 @@ public class BashScriptEngineTest {
         Integer returnCode = (Integer) scriptEngine.eval("echo $string $integer $float");
 
         assertEquals(NativeShellRunner.RETURN_CODE_OK, returnCode);
-        assertEquals(NativeShellRunner.RETURN_CODE_OK, scriptEngine.get(NativeShellScriptEngine.EXIT_VALUE_BINDING_NAME));
+        assertEquals(NativeShellRunner.RETURN_CODE_OK,
+                     scriptEngine.get(NativeShellScriptEngine.EXIT_VALUE_BINDING_NAME));
         assertEquals("aString 42 42.0\n", scriptOutput.toString());
     }
 
     @Test
     public void evaluate_use_bindings_arrays() throws Exception {
-        scriptEngine.put("array", new String[]{"oneString", "anotherString", "thenAString"});
+        scriptEngine.put("array", new String[] { "oneString", "anotherString", "thenAString" });
         scriptEngine.put("array_empty", new String[0]);
-        scriptEngine.put("array_nulls", new String[]{null, null});
+        scriptEngine.put("array_nulls", new String[] { null, null });
 
         Integer returnCode = (Integer) scriptEngine.eval("echo $array_0 $array_1 $array_2 $array_empty_0 $array_nulls_0");
 
         assertEquals(NativeShellRunner.RETURN_CODE_OK, returnCode);
-        assertEquals(NativeShellRunner.RETURN_CODE_OK, scriptEngine.get(NativeShellScriptEngine.EXIT_VALUE_BINDING_NAME));
+        assertEquals(NativeShellRunner.RETURN_CODE_OK,
+                     scriptEngine.get(NativeShellScriptEngine.EXIT_VALUE_BINDING_NAME));
         assertEquals("oneString anotherString thenAString\n", scriptOutput.toString());
     }
 
@@ -93,7 +100,8 @@ public class BashScriptEngineTest {
         Integer returnCode = (Integer) scriptEngine.eval("echo $list_0 $list_1 $list_2 $list_empty_0 $list_nulls_0");
 
         assertEquals(NativeShellRunner.RETURN_CODE_OK, returnCode);
-        assertEquals(NativeShellRunner.RETURN_CODE_OK, scriptEngine.get(NativeShellScriptEngine.EXIT_VALUE_BINDING_NAME));
+        assertEquals(NativeShellRunner.RETURN_CODE_OK,
+                     scriptEngine.get(NativeShellScriptEngine.EXIT_VALUE_BINDING_NAME));
         assertEquals("oneString anotherString thenAString\n", scriptOutput.toString());
     }
 
@@ -106,7 +114,8 @@ public class BashScriptEngineTest {
         Integer returnCode = (Integer) scriptEngine.eval("echo $map_key $map_empty_key $map_nulls_key");
 
         assertEquals(NativeShellRunner.RETURN_CODE_OK, returnCode);
-        assertEquals(NativeShellRunner.RETURN_CODE_OK, scriptEngine.get(NativeShellScriptEngine.EXIT_VALUE_BINDING_NAME));
+        assertEquals(NativeShellRunner.RETURN_CODE_OK,
+                     scriptEngine.get(NativeShellScriptEngine.EXIT_VALUE_BINDING_NAME));
         assertEquals("value\n", scriptOutput.toString());
     }
 
@@ -159,7 +168,8 @@ public class BashScriptEngineTest {
     @Ignore("slow")
     @Test
     public void evaluate_script_with_large_output() throws Exception {
-        assertEquals(NativeShellRunner.RETURN_CODE_OK, scriptEngine.eval("for i in $(seq 10000); do echo $i; env; done"));
+        assertEquals(NativeShellRunner.RETURN_CODE_OK,
+                     scriptEngine.eval("for i in $(seq 10000); do echo $i; env; done"));
         assertTrue(scriptOutput.toString().contains("10000"));
     }
 
@@ -171,7 +181,8 @@ public class BashScriptEngineTest {
         }
 
         assertEquals(NativeShellRunner.RETURN_CODE_OK, scriptEngine.eval(largeScript));
-        assertEquals(NativeShellRunner.RETURN_CODE_OK, scriptEngine.get(NativeShellScriptEngine.EXIT_VALUE_BINDING_NAME));
+        assertEquals(NativeShellRunner.RETURN_CODE_OK,
+                     scriptEngine.get(NativeShellScriptEngine.EXIT_VALUE_BINDING_NAME));
         assertTrue(scriptOutput.toString().contains("aString4999"));
     }
 }

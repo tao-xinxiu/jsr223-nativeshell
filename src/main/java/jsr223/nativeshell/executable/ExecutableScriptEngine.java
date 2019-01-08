@@ -1,14 +1,16 @@
 package jsr223.nativeshell.executable;
 
-import jsr223.nativeshell.IOUtils;
-import jsr223.nativeshell.NativeShellScriptEngine;
+import static jsr223.nativeshell.IOUtils.pipe;
+import static jsr223.nativeshell.StringUtils.toEmptyStringIfNull;
 
-import javax.script.*;
 import java.io.*;
 import java.util.*;
 
-import static jsr223.nativeshell.IOUtils.pipe;
-import static jsr223.nativeshell.StringUtils.toEmptyStringIfNull;
+import javax.script.*;
+
+import jsr223.nativeshell.IOUtils;
+import jsr223.nativeshell.NativeShellScriptEngine;
+
 
 public class ExecutableScriptEngine extends AbstractScriptEngine {
 
@@ -40,11 +42,14 @@ public class ExecutableScriptEngine extends AbstractScriptEngine {
 
             int exitValue = process.exitValue();
 
-            if (scriptContext.getBindings(ScriptContext.ENGINE_SCOPE).containsKey(NativeShellScriptEngine.VARIABLES_BINDING_NAME)) {
-                Map<String, Serializable> variables = (Map<String, Serializable>) scriptContext.getBindings(ScriptContext.ENGINE_SCOPE).get(NativeShellScriptEngine.VARIABLES_BINDING_NAME);
+            if (scriptContext.getBindings(ScriptContext.ENGINE_SCOPE)
+                             .containsKey(NativeShellScriptEngine.VARIABLES_BINDING_NAME)) {
+                Map<String, Serializable> variables = (Map<String, Serializable>) scriptContext.getBindings(ScriptContext.ENGINE_SCOPE)
+                                                                                               .get(NativeShellScriptEngine.VARIABLES_BINDING_NAME);
                 variables.put(NativeShellScriptEngine.EXIT_VALUE_BINDING_NAME, exitValue);
             }
-            scriptContext.getBindings(ScriptContext.ENGINE_SCOPE).put(NativeShellScriptEngine.EXIT_VALUE_BINDING_NAME, exitValue);
+            scriptContext.getBindings(ScriptContext.ENGINE_SCOPE).put(NativeShellScriptEngine.EXIT_VALUE_BINDING_NAME,
+                                                                      exitValue);
             if (exitValue != 0) {
                 throw new ScriptException("Command execution failed with exit code " + exitValue);
             }
@@ -96,11 +101,13 @@ public class ExecutableScriptEngine extends AbstractScriptEngine {
 
     private void addMapBindingAsEnvironmentVariable(String bindingKey, Map<?, ?> bindingValue, Bindings bindings) {
         for (Map.Entry<?, ?> entry : ((Map<?, ?>) bindingValue).entrySet()) {
-            bindings.put(bindingKey + "_" + entry.getKey(), (entry.getValue() == null ? "" : toEmptyStringIfNull(entry.getValue())));
+            bindings.put(bindingKey + "_" + entry.getKey(),
+                         (entry.getValue() == null ? "" : toEmptyStringIfNull(entry.getValue())));
         }
     }
 
-    private void addCollectionBindingAsEnvironmentVariable(String bindingKey, Collection bindingValue, Bindings bindings) {
+    private void addCollectionBindingAsEnvironmentVariable(String bindingKey, Collection bindingValue,
+            Bindings bindings) {
         Object[] bindingValueAsArray = bindingValue.toArray();
         addArrayBindingAsEnvironmentVariable(bindingKey, bindingValueAsArray, bindings);
     }

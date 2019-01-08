@@ -1,11 +1,12 @@
 package jsr223.nativeshell.cmd;
 
-import org.junit.Test;
+import static org.junit.Assert.assertNotNull;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 
-import static org.junit.Assert.assertNotNull;
+import org.junit.Test;
+
 
 public class CmdScriptEngineFactoryTest {
 

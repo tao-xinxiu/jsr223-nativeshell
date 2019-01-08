@@ -1,16 +1,19 @@
 package jsr223.nativeshell;
 
-import javax.script.ScriptEngineFactory;
 import java.io.File;
 
+import javax.script.ScriptEngineFactory;
+import javax.script.ScriptException;
+
+
 public interface NativeShell {
-    public ProcessBuilder createProcess(File commandAsFile);
+    ProcessBuilder createProcess(File commandAsFile) throws ScriptException;
 
-    public ProcessBuilder createProcess(String command);
+    ProcessBuilder createProcess(String command);
 
-    public String getInstalledVersionCommand();
+    String getInstalledVersionCommand();
 
-    public String getMajorVersionCommand();
+    String getMajorVersionCommand();
 
     ScriptEngineFactory getScriptEngineFactory();
 

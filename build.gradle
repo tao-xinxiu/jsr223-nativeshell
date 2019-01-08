@@ -1,10 +1,9 @@
-import org.gradle.api.JavaVersion
-
 apply plugin: 'java'
 apply plugin: 'maven'
 
 sourceCompatibility = JavaVersion.VERSION_1_7
 targetCompatibility = JavaVersion.VERSION_1_8
+
 
 // Configure the maven repository deployment
 install {
@@ -21,6 +20,11 @@ install {
 repositories {
     jcenter()
 }
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.13' //version required
+}
+
 
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.11'

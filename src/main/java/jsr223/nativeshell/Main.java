@@ -1,9 +1,10 @@
 package jsr223.nativeshell;
 
+import javax.script.ScriptException;
+
 import jsr223.nativeshell.bash.Bash;
 import jsr223.nativeshell.cmd.Cmd;
 
-import javax.script.ScriptException;
 
 public class Main {
 
