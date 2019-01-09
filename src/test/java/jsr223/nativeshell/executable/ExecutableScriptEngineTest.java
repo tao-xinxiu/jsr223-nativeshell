@@ -16,6 +16,7 @@ import org.junit.Test;
 
 import jsr223.nativeshell.NativeShellRunner;
 import jsr223.nativeshell.NativeShellScriptEngine;
+import org.ow2.proactive.scheduler.common.SchedulerConstants;
 
 
 public class ExecutableScriptEngineTest {
@@ -104,7 +105,7 @@ public class ExecutableScriptEngineTest {
         Bindings bindings = scriptEngine.createBindings();
 
         HashMap<String, Serializable> variables = new HashMap<>();
-        bindings.put(NativeShellScriptEngine.VARIABLES_BINDING_NAME, variables);
+        bindings.put(SchedulerConstants.VARIABLES_BINDING_NAME, variables);
 
         scriptEngine.eval("echo ok", bindings);
 
@@ -117,7 +118,7 @@ public class ExecutableScriptEngineTest {
         Bindings bindings = scriptEngine.createBindings();
 
         HashMap<String, Serializable> variables = new HashMap<>();
-        bindings.put(NativeShellScriptEngine.VARIABLES_BINDING_NAME, variables);
+        bindings.put(SchedulerConstants.VARIABLES_BINDING_NAME, variables);
 
         boolean exceptionThrown = false;
         try {
