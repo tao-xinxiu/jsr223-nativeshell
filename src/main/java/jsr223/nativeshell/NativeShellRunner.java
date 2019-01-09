@@ -1,5 +1,9 @@
 package jsr223.nativeshell;
 
+import org.ow2.proactive.scheduler.common.SchedulerConstants;
+import org.ow2.proactive.scheduler.task.SchedulerVars;
+import org.ow2.proactive.utils.CookieBasedProcessTreeKiller;
+
 import static jsr223.nativeshell.IOUtils.pipe;
 import static jsr223.nativeshell.StringUtils.toEmptyStringIfNull;
 
@@ -77,12 +81,16 @@ public class NativeShellRunner {
     private int run(File command, ScriptContext scriptContext) throws ScriptException{
         ProcessBuilder processBuilder = nativeShell.createProcess(command);
 
-        addBindingsAsEnvironmentVariables(scriptContext, processBuilder);
+        processBuilder.environment();
+
+        Map<String, String> environment = processBuilder.environment();
+        addBindingsAsEnvironmentVariables(scriptContext, environment);
+        CookieBasedProcessTreeKiller processTreeKiller = createProcessTreeKiller(scriptContext, environment);
 
         return run(processBuilder,
                    scriptContext.getReader(),
                    scriptContext.getWriter(),
-                   scriptContext.getErrorWriter());
+                   scriptContext.getErrorWriter(), processTreeKiller);
     }
 
     private String runAndGetOutput(String command) {
@@ -99,12 +107,12 @@ public class NativeShellRunner {
 
             }
         };
-        run(processBuilder, closedInput, processOutput, new StringWriter());
+        run(processBuilder, closedInput, processOutput, new StringWriter(), null);
         return processOutput.toString();
     }
 
     private static int run(ProcessBuilder processBuilder, Reader processInput, Writer processOutput,
-            Writer processError) {
+                           Writer processError, final CookieBasedProcessTreeKiller processTreeKiller) {
         Process process = null;
         Thread shutdownHook = null;
         try {
@@ -122,6 +130,9 @@ public class NativeShellRunner {
                 @Override
                 public void run() {
                     destroyProcessAndWaitForItToBeDestroyed(shutdownHookProcessReference);
+                    if (processTreeKiller != null) {
+                        processTreeKiller.kill();
+                    }
                 }
             };
             Runtime.getRuntime().addShutdownHook(shutdownHook);
@@ -142,6 +153,9 @@ public class NativeShellRunner {
             if (shutdownHook != null) {
                 Runtime.getRuntime().removeShutdownHook(shutdownHook);
             }
+            if (processTreeKiller != null) {
+                processTreeKiller.kill();
+            }
         }
     }
 
@@ -154,8 +168,7 @@ public class NativeShellRunner {
         }
     }
 
-    private void addBindingsAsEnvironmentVariables(ScriptContext scriptContext, ProcessBuilder processBuilder) {
-        Map<String, String> environment = processBuilder.environment();
+    private void addBindingsAsEnvironmentVariables(ScriptContext scriptContext, Map<String, String> environment) {
         for (Map.Entry<String, Object> binding : scriptContext.getBindings(ScriptContext.ENGINE_SCOPE).entrySet()) {
             String bindingKey = binding.getKey();
             Object bindingValue = binding.getValue();
@@ -170,6 +183,18 @@ public class NativeShellRunner {
                 environment.put(bindingKey, toEmptyStringIfNull(binding.getValue()));
             }
         }
+    }
+
+    public static CookieBasedProcessTreeKiller createProcessTreeKiller(ScriptContext scriptContext, Map<String, String> environment) {
+        CookieBasedProcessTreeKiller processKiller = null;
+        Map<String, String> genericInfo = (Map<String, String>) scriptContext.getBindings(ScriptContext.ENGINE_SCOPE).get(SchedulerConstants.GENERIC_INFO_BINDING_NAME);
+        Map<String, String> variables = (Map<String, String>) scriptContext.getBindings(ScriptContext.ENGINE_SCOPE).get(SchedulerConstants.VARIABLES_BINDING_NAME);
+        if (genericInfo != null && variables != null && !"true".equalsIgnoreCase(genericInfo.get(SchedulerConstants.DISABLE_PROCESS_TREE_KILLER_GENERIC_INFO))) {
+            String cookieSuffix = "NativeShell_Job" + variables.get(SchedulerVars.PA_JOB_ID) + "Task" + variables.get(SchedulerVars.PA_TASK_ID);
+            processKiller = CookieBasedProcessTreeKiller.createProcessChildrenKiller(cookieSuffix, environment);
+
+        }
+        return processKiller;
     }
 
     private void addMapBindingAsEnvironmentVariable(String bindingKey, Map<?, ?> bindingValue,

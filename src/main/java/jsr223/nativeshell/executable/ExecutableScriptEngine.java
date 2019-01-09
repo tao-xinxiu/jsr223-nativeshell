@@ -9,13 +9,17 @@ import java.util.*;
 import javax.script.*;
 
 import jsr223.nativeshell.IOUtils;
+import jsr223.nativeshell.NativeShellRunner;
 import jsr223.nativeshell.NativeShellScriptEngine;
+import org.ow2.proactive.scheduler.common.SchedulerConstants;
+import org.ow2.proactive.utils.CookieBasedProcessTreeKiller;
 
 
 public class ExecutableScriptEngine extends AbstractScriptEngine {
 
     @Override
     public Object eval(String script, ScriptContext scriptContext) throws ScriptException {
+        CookieBasedProcessTreeKiller processTreeKiller = null;
         try {
 
             String commandLineWithBindings = expandAndReplaceBindings(script, scriptContext);
@@ -25,6 +29,7 @@ public class ExecutableScriptEngine extends AbstractScriptEngine {
             for (Map.Entry<String, Object> binding : scriptContext.getBindings(ScriptContext.ENGINE_SCOPE).entrySet()) {
                 environment.put(binding.getKey(), toEmptyStringIfNull(binding.getValue()));
             }
+            processTreeKiller = NativeShellRunner.createProcessTreeKiller(scriptContext, environment);
 
             final Process process = processBuilder.start();
             Thread input = writeProcessInput(process.getOutputStream(), scriptContext.getReader());
@@ -43,9 +48,9 @@ public class ExecutableScriptEngine extends AbstractScriptEngine {
             int exitValue = process.exitValue();
 
             if (scriptContext.getBindings(ScriptContext.ENGINE_SCOPE)
-                             .containsKey(NativeShellScriptEngine.VARIABLES_BINDING_NAME)) {
+                             .containsKey(SchedulerConstants.VARIABLES_BINDING_NAME)) {
                 Map<String, Serializable> variables = (Map<String, Serializable>) scriptContext.getBindings(ScriptContext.ENGINE_SCOPE)
-                                                                                               .get(NativeShellScriptEngine.VARIABLES_BINDING_NAME);
+                                                                                               .get(SchedulerConstants.VARIABLES_BINDING_NAME);
                 variables.put(NativeShellScriptEngine.EXIT_VALUE_BINDING_NAME, exitValue);
             }
             scriptContext.getBindings(ScriptContext.ENGINE_SCOPE).put(NativeShellScriptEngine.EXIT_VALUE_BINDING_NAME,
@@ -59,6 +64,10 @@ public class ExecutableScriptEngine extends AbstractScriptEngine {
             throw e;
         } catch (Exception e) {
             throw new ScriptException(e);
+        } finally {
+            if (processTreeKiller != null) {
+                processTreeKiller.kill();
+            }
         }
     }
 
