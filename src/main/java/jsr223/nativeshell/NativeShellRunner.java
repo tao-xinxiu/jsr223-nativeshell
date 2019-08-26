@@ -251,7 +251,8 @@ public class NativeShellRunner {
         try {
             File commandAsFile = File.createTempFile("jsr223nativeshell-", nativeShell.getFileExtension());
             commandAsFile.setExecutable(true);
-            IOUtils.writeStringToFile(command, commandAsFile);
+            // we add new line to the command because it is mandatory for Rexx scripts
+            IOUtils.writeStringToFile(command + System.lineSeparator(), commandAsFile);
             return commandAsFile;
         } catch (IOException e) {
             throw new RuntimeException(e);
