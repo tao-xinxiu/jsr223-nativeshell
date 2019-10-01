@@ -73,9 +73,12 @@ public class NativeShellRunner {
 
     public int run(String command, ScriptContext scriptContext) throws ScriptException {
         File commandAsTemporaryFile = commandAsTemporaryFile(command.trim());
-        int exitValue = run(commandAsTemporaryFile, scriptContext);
-        commandAsTemporaryFile.delete();
-        return exitValue;
+        try {
+            int exitValue = run(commandAsTemporaryFile, scriptContext);
+            return exitValue;
+        } finally {
+            commandAsTemporaryFile.delete();
+        }
     }
 
     private int run(File command, ScriptContext scriptContext) throws ScriptException{
