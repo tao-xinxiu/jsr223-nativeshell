@@ -1,8 +1,29 @@
+/*
+ * ProActive Parallel Suite(TM):
+ * The Open Source library for parallel and distributed
+ * Workflows & Scheduling, Orchestration, Cloud Automation
+ * and Big Data Analysis on Enterprise Grids & Clouds.
+ *
+ * Copyright (c) 2007 - 2017 ActiveEon
+ * Contact: contact@activeeon.com
+ *
+ * This library is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU Affero General Public License
+ * as published by the Free Software Foundation: version 3 of
+ * the License.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * If needed, contact us to obtain a release under GPL Version 2 or 3
+ * or a different license than the AGPL.
+ */
 package jsr223.nativeshell;
-
-import org.ow2.proactive.scheduler.common.SchedulerConstants;
-import org.ow2.proactive.scheduler.task.SchedulerVars;
-import org.ow2.proactive.utils.CookieBasedProcessTreeKiller;
 
 import static jsr223.nativeshell.IOUtils.pipe;
 import static jsr223.nativeshell.StringUtils.toEmptyStringIfNull;
@@ -18,16 +39,26 @@ import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
+import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptException;
+
+import org.ow2.proactive.scheduler.common.SchedulerConstants;
+import org.ow2.proactive.scheduler.task.SchedulerVars;
+import org.ow2.proactive.utils.CookieBasedProcessTreeKiller;
 
 
 public class NativeShellRunner {
 
     public static final Integer RETURN_CODE_OK = 0;
+
+    public static final String ARGS = "args";
 
     private NativeShell nativeShell;
 
@@ -81,19 +112,35 @@ public class NativeShellRunner {
         }
     }
 
-    private int run(File command, ScriptContext scriptContext) throws ScriptException{
+    private int run(File command, ScriptContext scriptContext) throws ScriptException {
         ProcessBuilder processBuilder = nativeShell.createProcess(command);
 
         processBuilder.environment();
 
         Map<String, String> environment = processBuilder.environment();
+        List<String> arguments = getArguments(scriptContext);
         addBindingsAsEnvironmentVariables(scriptContext, environment);
+        processBuilder.command().addAll(arguments);
         CookieBasedProcessTreeKiller processTreeKiller = createProcessTreeKiller(scriptContext, environment);
 
         return run(processBuilder,
                    scriptContext.getReader(),
                    scriptContext.getWriter(),
-                   scriptContext.getErrorWriter(), processTreeKiller);
+                   scriptContext.getErrorWriter(),
+                   processTreeKiller);
+    }
+
+    private List<String> getArguments(ScriptContext scriptContext) {
+        Bindings bindings = scriptContext.getBindings(ScriptContext.ENGINE_SCOPE);
+        if (bindings != null && bindings.containsKey(ARGS)) {
+            if (bindings.get(ARGS) instanceof String[]) {
+                String[] arguments = (String[]) bindings.get(ARGS);
+                return Arrays.asList(arguments);
+            } else {
+                // should never occur, unfortunately, we cannot log this issue
+            }
+        }
+        return new ArrayList<>();
     }
 
     private String runAndGetOutput(String command) {
@@ -115,7 +162,7 @@ public class NativeShellRunner {
     }
 
     private static int run(ProcessBuilder processBuilder, Reader processInput, Writer processOutput,
-                           Writer processError, final CookieBasedProcessTreeKiller processTreeKiller) {
+            Writer processError, final CookieBasedProcessTreeKiller processTreeKiller) {
         Process process = null;
         Thread shutdownHook = null;
         try {
@@ -188,12 +235,17 @@ public class NativeShellRunner {
         }
     }
 
-    public static CookieBasedProcessTreeKiller createProcessTreeKiller(ScriptContext scriptContext, Map<String, String> environment) {
+    public static CookieBasedProcessTreeKiller createProcessTreeKiller(ScriptContext scriptContext,
+            Map<String, String> environment) {
         CookieBasedProcessTreeKiller processKiller = null;
-        Map<String, String> genericInfo = (Map<String, String>) scriptContext.getBindings(ScriptContext.ENGINE_SCOPE).get(SchedulerConstants.GENERIC_INFO_BINDING_NAME);
-        Map<String, String> variables = (Map<String, String>) scriptContext.getBindings(ScriptContext.ENGINE_SCOPE).get(SchedulerConstants.VARIABLES_BINDING_NAME);
-        if (genericInfo != null && variables != null && !"true".equalsIgnoreCase(genericInfo.get(SchedulerConstants.DISABLE_PROCESS_TREE_KILLER_GENERIC_INFO))) {
-            String cookieSuffix = "NativeShell_Job" + variables.get(SchedulerVars.PA_JOB_ID) + "Task" + variables.get(SchedulerVars.PA_TASK_ID);
+        Map<String, String> genericInfo = (Map<String, String>) scriptContext.getBindings(ScriptContext.ENGINE_SCOPE)
+                                                                             .get(SchedulerConstants.GENERIC_INFO_BINDING_NAME);
+        Map<String, String> variables = (Map<String, String>) scriptContext.getBindings(ScriptContext.ENGINE_SCOPE)
+                                                                           .get(SchedulerConstants.VARIABLES_BINDING_NAME);
+        if (genericInfo != null && variables != null &&
+            !"true".equalsIgnoreCase(genericInfo.get(SchedulerConstants.DISABLE_PROCESS_TREE_KILLER_GENERIC_INFO))) {
+            String cookieSuffix = "NativeShell_Job" + variables.get(SchedulerVars.PA_JOB_ID) + "Task" +
+                                  variables.get(SchedulerVars.PA_TASK_ID);
             processKiller = CookieBasedProcessTreeKiller.createProcessChildrenKiller(cookieSuffix, environment);
 
         }

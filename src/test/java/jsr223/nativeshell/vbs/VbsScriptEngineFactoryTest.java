@@ -23,7 +23,7 @@
  * If needed, contact us to obtain a release under GPL Version 2 or 3
  * or a different license than the AGPL.
  */
-package jsr223.nativeshell.shell;
+package jsr223.nativeshell.vbs;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -34,22 +34,22 @@ import javax.script.ScriptEngineManager;
 import org.junit.Test;
 
 
-public class ShellScriptEngineFactoryTest {
+public class VbsScriptEngineFactoryTest {
 
     @Test
-    public void testShellScriptEngineIsFound() {
+    public void testVbsScriptEngineIsFound() {
         ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
 
-        assertNotNull(scriptEngineManager.getEngineByExtension("sh"));
-        assertNotNull(scriptEngineManager.getEngineByName("shell"));
-        assertEquals("shell", scriptEngineManager.getEngineByMimeType("application/x-sh").getFactory().getEngineName());
+        assertNotNull(scriptEngineManager.getEngineByExtension("vbs"));
+        assertNotNull(scriptEngineManager.getEngineByName("vbscript"));
+        assertEquals("vbscript", scriptEngineManager.getEngineByMimeType("text/vbscript").getFactory().getEngineName());
     }
 
     @Test
-    public void testBashScriptEngineVersions() {
-        ScriptEngine bashScriptEngine = new ScriptEngineManager().getEngineByExtension("sh");
+    public void testVbsScriptEngineVersions() {
+        ScriptEngine vbsScriptEngine = new ScriptEngineManager().getEngineByExtension("vbs");
 
-        assertNotNull(bashScriptEngine.getFactory().getEngineVersion());
-        assertNotNull(bashScriptEngine.getFactory().getLanguageVersion());
+        assertNotNull(vbsScriptEngine.getFactory().getEngineVersion());
+        assertNotNull(vbsScriptEngine.getFactory().getLanguageVersion());
     }
 }

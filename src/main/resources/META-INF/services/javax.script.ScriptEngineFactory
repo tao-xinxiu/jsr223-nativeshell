@@ -2,3 +2,4 @@ jsr223.nativeshell.bash.BashScriptEngineFactory
 jsr223.nativeshell.cmd.CmdScriptEngineFactory
 jsr223.nativeshell.executable.ExecutableScriptEngineFactory
 jsr223.nativeshell.shell.ShellEngineFactory
+jsr223.nativeshell.vbs.VbsScriptEngineFactory
