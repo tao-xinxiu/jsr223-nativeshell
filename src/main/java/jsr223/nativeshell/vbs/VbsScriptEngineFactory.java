@@ -23,11 +23,10 @@
  * If needed, contact us to obtain a release under GPL Version 2 or 3
  * or a different license than the AGPL.
  */
-package jsr223.nativeshell.bash;
+package jsr223.nativeshell.vbs;
 
 import static java.util.Arrays.asList;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,21 +34,20 @@ import java.util.Map;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 
-import jsr223.nativeshell.NativeShellRunner;
 import jsr223.nativeshell.NativeShellScriptEngine;
 
 
-public class BashScriptEngineFactory implements ScriptEngineFactory {
+public class VbsScriptEngineFactory implements ScriptEngineFactory {
 
-    private static final String NAME = "bash";
+    private static final String NAME = "vbscript";
 
-    private static final String ENGINE = "Bash interpreter";
+    private static final String ENGINE = "VBscript interpreter";
 
-    private static final String ENGINE_VERSION = new NativeShellRunner(new Bash()).getInstalledVersion();
+    private static final String ENGINE_VERSION = "1.0";
 
-    private static final String LANGUAGE = "Bash";
+    private static final String LANGUAGE = "VBscript";
 
-    private static final String LANGUAGE_VERSION = new NativeShellRunner(new Bash()).getMajorVersion();
+    private static final String LANGUAGE_VERSION = "1.0";
 
     private static final Map<String, Object> parameters = new HashMap<String, Object>();
 
@@ -73,17 +71,17 @@ public class BashScriptEngineFactory implements ScriptEngineFactory {
 
     @Override
     public List<String> getExtensions() {
-        return Collections.singletonList("bash");
+        return asList("vbs");
     }
 
     @Override
     public List<String> getMimeTypes() {
-        return Collections.singletonList("application/x-bash");
+        return asList("text/vbscript");
     }
 
     @Override
     public List<String> getNames() {
-        return asList("bash", "Bash");
+        return asList("vbscript", "VBscript");
     }
 
     @Override
@@ -108,12 +106,12 @@ public class BashScriptEngineFactory implements ScriptEngineFactory {
 
     @Override
     public String getOutputStatement(String toDisplay) {
-        return "echo -n " + toDisplay;
+        return "echo " + toDisplay;
     }
 
     @Override
     public String getProgram(String... statements) {
-        String program = "#!/bin/bash\n";
+        String program = "";
         for (String statement : statements) {
             program += statement + "\n";
         }
@@ -122,6 +120,6 @@ public class BashScriptEngineFactory implements ScriptEngineFactory {
 
     @Override
     public ScriptEngine getScriptEngine() {
-        return new NativeShellScriptEngine(new Bash());
+        return new NativeShellScriptEngine(new Vbs());
     }
 }

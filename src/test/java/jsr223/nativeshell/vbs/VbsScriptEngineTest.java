@@ -23,9 +23,12 @@
  * If needed, contact us to obtain a release under GPL Version 2 or 3
  * or a different license than the AGPL.
  */
-package jsr223.nativeshell.cmd;
+package jsr223.nativeshell.vbs;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.StringReader;
@@ -38,14 +41,17 @@ import javax.script.SimpleScriptContext;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import jsr223.nativeshell.NativeShellRunner;
 import jsr223.nativeshell.NativeShellScriptEngine;
 
 
-public class CmdScriptEngineTest {
+public class VbsScriptEngineTest {
+
+    public static final String SCRIPT_READ_ENV_VAR = "Set wshShell = CreateObject( \"WScript.Shell\" )\n" +
+                                                     "Set wshProcessEnv = wshShell.Environment( \"PROCESS\" )\n" +
+                                                     "WScript.Echo wshProcessEnv( \"string\" )";
 
     private NativeShellScriptEngine scriptEngine;
 
@@ -62,7 +68,7 @@ public class CmdScriptEngineTest {
 
     @Before
     public void setup() {
-        scriptEngine = new NativeShellScriptEngine(new Cmd());
+        scriptEngine = new NativeShellScriptEngine(new Vbs());
         scriptOutput = new StringWriter();
         scriptEngine.getContext().setWriter(scriptOutput);
         scriptError = new StringWriter();
@@ -71,7 +77,7 @@ public class CmdScriptEngineTest {
 
     @Test
     public void evaluate_echo_command() throws Exception {
-        Integer returnCode = (Integer) scriptEngine.eval("echo hello");
+        Integer returnCode = (Integer) scriptEngine.eval("Wscript.Echo \"hello\"");
 
         assertEquals(NativeShellRunner.RETURN_CODE_OK, returnCode);
         assertEquals(NativeShellRunner.RETURN_CODE_OK,
@@ -84,7 +90,8 @@ public class CmdScriptEngineTest {
         Integer returnCode = null;
         boolean exceptionThrown = false;
         try {
-            returnCode = (Integer) scriptEngine.eval("nonexistingcommandwhatsoever");
+            // only compilation error induce non-zero exit value, unfortunately
+            returnCode = (Integer) scriptEngine.eval("Wscript.Echo \"hello");
         } catch (Exception e) {
             exceptionThrown = true;
         }
@@ -93,84 +100,75 @@ public class CmdScriptEngineTest {
         assertNotEquals(NativeShellRunner.RETURN_CODE_OK,
                         scriptEngine.get(NativeShellScriptEngine.EXIT_VALUE_BINDING_NAME));
         assertTrue(scriptError.toString().length() > 0);
-        // Disabled the following check as it is language-specific
-        //assertEquals("cmd: nonexistingcommandwhatsoever: command not found" + nl, scriptError.toString());
     }
 
     @Test
     public void evaluate_use_bindings() throws Exception {
-        ScriptEngine bashScriptEngine = scriptEngine;
+        ScriptEngine vbsScriptEngine = scriptEngine;
 
-        bashScriptEngine.put("string", "aString");
-        bashScriptEngine.put("integer", 42);
-        bashScriptEngine.put("float", 42.0);
+        vbsScriptEngine.put("string", "aString");
+        vbsScriptEngine.put("integer", 42);
+        vbsScriptEngine.put("float", 42.0);
 
-        Integer returnCode = (Integer) bashScriptEngine.eval("echo %string% %integer% %float%");
+        Integer returnCode = (Integer) vbsScriptEngine.eval("Set wshShell = CreateObject( \"WScript.Shell\" )\n" +
+                                                            "Set wshProcessEnv = wshShell.Environment( \"PROCESS\" )\n" +
+                                                            "WScript.Echo wshProcessEnv( \"string\" ) & \" \" & wshProcessEnv( \"integer\" ) & \" \" & wshProcessEnv( \"float\" )");
 
         assertEquals(NativeShellRunner.RETURN_CODE_OK, returnCode);
         assertEquals(NativeShellRunner.RETURN_CODE_OK,
-                     bashScriptEngine.get(NativeShellScriptEngine.EXIT_VALUE_BINDING_NAME));
+                     vbsScriptEngine.get(NativeShellScriptEngine.EXIT_VALUE_BINDING_NAME));
         assertEquals("aString 42 42.0" + nl, scriptOutput.toString());
     }
 
     @Test
-    public void evaluate_different_calls() throws Exception {
-        ScriptEngine bashScriptEngine = scriptEngine;
-
-        assertEquals(NativeShellRunner.RETURN_CODE_OK, bashScriptEngine.eval("echo %string%"));
-        assertEquals(NativeShellRunner.RETURN_CODE_OK, bashScriptEngine.eval(new StringReader("echo %string%")));
-    }
-
-    @Test
     public void evaluate_different_calls_with_bindings() throws Exception {
-        ScriptEngine bashScriptEngine = scriptEngine;
+        ScriptEngine vbsScriptEngine = scriptEngine;
 
         SimpleBindings bindings = new SimpleBindings();
         bindings.put("string", "aString");
 
-        assertEquals(NativeShellRunner.RETURN_CODE_OK, bashScriptEngine.eval("echo %string%", bindings));
+        assertEquals(NativeShellRunner.RETURN_CODE_OK, vbsScriptEngine.eval(SCRIPT_READ_ENV_VAR, bindings));
         assertEquals(NativeShellRunner.RETURN_CODE_OK,
-                     bashScriptEngine.eval(new StringReader("echo %string%"), bindings));
+                     vbsScriptEngine.eval(new StringReader(SCRIPT_READ_ENV_VAR), bindings));
         assertEquals("aString" + nl + "aString" + nl, scriptOutput.toString());
     }
 
     @Test
     public void evaluate_different_calls_with_context() throws Exception {
-        ScriptEngine bashScriptEngine = scriptEngine;
+        ScriptEngine vbsScriptEngine = scriptEngine;
 
         SimpleScriptContext context = new SimpleScriptContext();
         context.setAttribute("string", "aString", ScriptContext.ENGINE_SCOPE);
         context.setWriter(scriptOutput);
         context.setErrorWriter(scriptError);
 
-        assertEquals(NativeShellRunner.RETURN_CODE_OK, bashScriptEngine.eval("echo %string%", context));
+        assertEquals(NativeShellRunner.RETURN_CODE_OK, vbsScriptEngine.eval(SCRIPT_READ_ENV_VAR, context));
         assertEquals(NativeShellRunner.RETURN_CODE_OK,
-                     bashScriptEngine.eval(new StringReader("echo %string%"), context));
+                     vbsScriptEngine.eval(new StringReader(SCRIPT_READ_ENV_VAR), context));
         assertEquals("aString" + nl + "aString" + nl, scriptOutput.toString());
     }
 
-    @Ignore("slow")
     @Test
     public void evaluate_script_with_large_output() throws Exception {
-        ScriptEngine bashScriptEngine = scriptEngine;
+        ScriptEngine vbsScriptEngine = scriptEngine;
 
-        assertEquals(NativeShellRunner.RETURN_CODE_OK, bashScriptEngine.eval("FOR /L %%G IN (1,1,10000) DO echo %%G"));
+        assertEquals(NativeShellRunner.RETURN_CODE_OK,
+                     vbsScriptEngine.eval("For x = 1 To 10000\n" + "     WScript.Echo x\n" + "   Next"));
         assertTrue(scriptOutput.toString().contains("10000"));
     }
 
-    @Ignore("slow")
     @Test
     public void evaluate_large_script() throws Exception {
-        ScriptEngine bashScriptEngine = scriptEngine;
+        ScriptEngine vbsScriptEngine = scriptEngine;
 
         String largeScript = "";
         for (int i = 0; i < 5000; i++) {
-            largeScript += "echo aString" + i + nl;
+            largeScript += "WScript.Echo \"hello" + i + "\"" + nl;
         }
 
-        assertEquals(NativeShellRunner.RETURN_CODE_OK, bashScriptEngine.eval(largeScript));
+        assertEquals(NativeShellRunner.RETURN_CODE_OK, vbsScriptEngine.eval(largeScript));
         assertEquals(NativeShellRunner.RETURN_CODE_OK,
-                     bashScriptEngine.get(NativeShellScriptEngine.EXIT_VALUE_BINDING_NAME));
-        assertTrue(scriptOutput.toString().contains("aString4999"));
+                     vbsScriptEngine.get(NativeShellScriptEngine.EXIT_VALUE_BINDING_NAME));
+        assertTrue(scriptOutput.toString().contains("hello4999"));
     }
 }

@@ -23,33 +23,46 @@
  * If needed, contact us to obtain a release under GPL Version 2 or 3
  * or a different license than the AGPL.
  */
-package jsr223.nativeshell.shell;
+package jsr223.nativeshell.vbs;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import java.io.File;
 
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
+import javax.script.ScriptEngineFactory;
 
-import org.junit.Test;
+import jsr223.nativeshell.NativeShell;
 
 
-public class ShellScriptEngineFactoryTest {
+public class Vbs implements NativeShell {
 
-    @Test
-    public void testShellScriptEngineIsFound() {
-        ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
-
-        assertNotNull(scriptEngineManager.getEngineByExtension("sh"));
-        assertNotNull(scriptEngineManager.getEngineByName("shell"));
-        assertEquals("shell", scriptEngineManager.getEngineByMimeType("application/x-sh").getFactory().getEngineName());
+    @Override
+    public ProcessBuilder createProcess(File commandAsFile) {
+        // the option /B can be used for non-interactive mode, but unfortunately this disable any Echo or error to be printed
+        return new ProcessBuilder("cscript", "/nologo", commandAsFile.getAbsolutePath());
     }
 
-    @Test
-    public void testBashScriptEngineVersions() {
-        ScriptEngine bashScriptEngine = new ScriptEngineManager().getEngineByExtension("sh");
-
-        assertNotNull(bashScriptEngine.getFactory().getEngineVersion());
-        assertNotNull(bashScriptEngine.getFactory().getLanguageVersion());
+    @Override
+    public ProcessBuilder createProcess(String command) {
+        throw new UnsupportedOperationException();
     }
+
+    @Override
+    public String getInstalledVersionCommand() {
+        return null;
+    }
+
+    @Override
+    public String getMajorVersionCommand() {
+        return null;
+    }
+
+    @Override
+    public ScriptEngineFactory getScriptEngineFactory() {
+        return new VbsScriptEngineFactory();
+    }
+
+    @Override
+    public String getFileExtension() {
+        return ".vbs";
+    }
+
 }
