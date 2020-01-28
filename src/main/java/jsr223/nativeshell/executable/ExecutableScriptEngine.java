@@ -157,8 +157,9 @@ public class ExecutableScriptEngine extends AbstractScriptEngine {
         return new Thread(new Runnable() {
             @Override
             public void run() {
-                try {
-                    pipe(new BufferedReader(new InputStreamReader(processOutput)), new BufferedWriter(contextWriter));
+                try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(processOutput));
+                        BufferedWriter bufferedWriter = new BufferedWriter(contextWriter)) {
+                    pipe(bufferedReader, bufferedWriter, null);
                 } catch (IOException ignored) {
                 }
             }
@@ -169,13 +170,11 @@ public class ExecutableScriptEngine extends AbstractScriptEngine {
         return new Thread(new Runnable() {
             @Override
             public void run() {
-                try {
-                    pipe(new BufferedReader(contextWriter), new OutputStreamWriter(processOutput));
-                } catch (IOException closed) {
-                    try {
-                        processOutput.close();
-                    } catch (IOException ignored) {
-                    }
+                try (BufferedReader bufferedReader = new BufferedReader(contextWriter);
+                        OutputStreamWriter outputStreamWriter = new OutputStreamWriter(processOutput)) {
+                    pipe(bufferedReader, outputStreamWriter, null);
+                } catch (IOException ignored) {
+
                 }
             }
         });
