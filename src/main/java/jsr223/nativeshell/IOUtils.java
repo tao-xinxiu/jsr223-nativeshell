@@ -51,14 +51,16 @@ public final class IOUtils {
         out.close();
     }
 
-    public static void pipe(Reader from, Writer to) throws IOException {
+    public static void pipe(Reader from, Writer to, StringBuilder captureOutput) throws IOException {
         char[] buff = new char[1024];
         int n = from.read(buff);
         while (n != -1) {
             to.write(buff, 0, n);
             to.flush();
+            if (captureOutput != null) {
+                captureOutput.append(buff, 0, n);
+            }
             n = from.read(buff);
         }
-        from.close();
     }
 }

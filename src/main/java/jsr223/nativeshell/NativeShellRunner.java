@@ -51,14 +51,13 @@ import javax.script.ScriptException;
 
 import org.ow2.proactive.scheduler.common.SchedulerConstants;
 import org.ow2.proactive.scheduler.task.SchedulerVars;
+import org.ow2.proactive.scripting.Script;
 import org.ow2.proactive.utils.CookieBasedProcessTreeKiller;
 
 
 public class NativeShellRunner {
 
     public static final Integer RETURN_CODE_OK = 0;
-
-    public static final String ARGS = "args";
 
     private NativeShell nativeShell;
 
@@ -102,21 +101,18 @@ public class NativeShellRunner {
         }
     }
 
-    public int run(String command, ScriptContext scriptContext) throws ScriptException {
+    public int run(String command, ScriptContext scriptContext, StringBuilder captureOutput) throws ScriptException {
         File commandAsTemporaryFile = commandAsTemporaryFile(command.trim());
         try {
-            int exitValue = run(commandAsTemporaryFile, scriptContext);
+            int exitValue = run(commandAsTemporaryFile, scriptContext, captureOutput);
             return exitValue;
         } finally {
             commandAsTemporaryFile.delete();
         }
     }
 
-    private int run(File command, ScriptContext scriptContext) throws ScriptException {
+    private int run(File command, ScriptContext scriptContext, StringBuilder captureOutput) throws ScriptException {
         ProcessBuilder processBuilder = nativeShell.createProcess(command);
-
-        processBuilder.environment();
-
         Map<String, String> environment = processBuilder.environment();
         List<String> arguments = getArguments(scriptContext);
         addBindingsAsEnvironmentVariables(scriptContext, environment);
@@ -127,14 +123,15 @@ public class NativeShellRunner {
                    scriptContext.getReader(),
                    scriptContext.getWriter(),
                    scriptContext.getErrorWriter(),
-                   processTreeKiller);
+                   processTreeKiller,
+                   captureOutput);
     }
 
     private List<String> getArguments(ScriptContext scriptContext) {
         Bindings bindings = scriptContext.getBindings(ScriptContext.ENGINE_SCOPE);
-        if (bindings != null && bindings.containsKey(ARGS)) {
-            if (bindings.get(ARGS) instanceof String[]) {
-                String[] arguments = (String[]) bindings.get(ARGS);
+        if (bindings != null && bindings.containsKey(Script.ARGUMENTS_NAME)) {
+            if (bindings.get(Script.ARGUMENTS_NAME) instanceof String[]) {
+                String[] arguments = (String[]) bindings.get(Script.ARGUMENTS_NAME);
                 return Arrays.asList(arguments);
             } else {
                 // should never occur, unfortunately, we cannot log this issue
@@ -157,19 +154,19 @@ public class NativeShellRunner {
 
             }
         };
-        run(processBuilder, closedInput, processOutput, new StringWriter(), null);
+        run(processBuilder, closedInput, processOutput, new StringWriter(), null, null);
         return processOutput.toString();
     }
 
     private static int run(ProcessBuilder processBuilder, Reader processInput, Writer processOutput,
-            Writer processError, final CookieBasedProcessTreeKiller processTreeKiller) {
+            Writer processError, final CookieBasedProcessTreeKiller processTreeKiller, StringBuilder captureOutput) {
         Process process = null;
         Thread shutdownHook = null;
         try {
             process = processBuilder.start();
             Thread input = writeProcessInput(process.getOutputStream(), processInput);
-            Thread output = readProcessOutput(process.getInputStream(), processOutput);
-            Thread error = readProcessOutput(process.getErrorStream(), processError);
+            Thread output = readProcessOutput(process.getInputStream(), processOutput, captureOutput);
+            Thread error = readProcessOutput(process.getErrorStream(), processError, null);
 
             input.start();
             output.start();
@@ -274,12 +271,14 @@ public class NativeShellRunner {
         }
     }
 
-    private static Thread readProcessOutput(final InputStream processOutput, final Writer contextWriter) {
+    private static Thread readProcessOutput(final InputStream processOutput, final Writer contextWriter,
+            StringBuilder captureOutput) {
         return new Thread(new Runnable() {
             @Override
             public void run() {
-                try {
-                    pipe(new BufferedReader(new InputStreamReader(processOutput)), new BufferedWriter(contextWriter));
+                try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(processOutput));
+                        BufferedWriter bufferedWriter = new BufferedWriter(contextWriter)) {
+                    pipe(bufferedReader, bufferedWriter, captureOutput);
                 } catch (IOException ignored) {
                 }
             }
@@ -290,13 +289,10 @@ public class NativeShellRunner {
         return new Thread(new Runnable() {
             @Override
             public void run() {
-                try {
-                    pipe(new BufferedReader(contextWriter), new OutputStreamWriter(processOutput));
-                } catch (IOException closed) {
-                    try {
-                        processOutput.close();
-                    } catch (IOException ignored) {
-                    }
+                try (BufferedReader bufferedReader = new BufferedReader(contextWriter);
+                        OutputStreamWriter outputStreamWriter = new OutputStreamWriter(processOutput)) {
+                    pipe(bufferedReader, outputStreamWriter, null);
+                } catch (IOException ignored) {
                 }
             }
         });

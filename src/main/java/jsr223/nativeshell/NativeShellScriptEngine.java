@@ -44,6 +44,8 @@ public class NativeShellScriptEngine extends AbstractScriptEngine {
 
     public static final String EXIT_VALUE_BINDING_NAME = "EXIT_VALUE";
 
+    public static final String CONTENT_TYPE = "content.type";
+
     private NativeShell nativeShell;
 
     public NativeShellScriptEngine(NativeShell nativeShell) {
@@ -52,7 +54,12 @@ public class NativeShellScriptEngine extends AbstractScriptEngine {
 
     @Override
     public Object eval(String script, ScriptContext context) throws ScriptException {
-        int exitValue = new NativeShellRunner(nativeShell).run(script, context);
+        StringBuilder captureOutput = null;
+        String contentType = getOutputContentType(context);
+        if (contentType != null) {
+            captureOutput = new StringBuilder();
+        }
+        int exitValue = new NativeShellRunner(nativeShell).run(script, context, captureOutput);
         if (context.getBindings(ScriptContext.ENGINE_SCOPE).containsKey(SchedulerConstants.VARIABLES_BINDING_NAME)) {
             Map<String, Serializable> variables = (Map<String, Serializable>) context.getBindings(ScriptContext.ENGINE_SCOPE)
                                                                                      .get(SchedulerConstants.VARIABLES_BINDING_NAME);
@@ -61,6 +68,9 @@ public class NativeShellScriptEngine extends AbstractScriptEngine {
         context.getBindings(ScriptContext.ENGINE_SCOPE).put(EXIT_VALUE_BINDING_NAME, exitValue);
         if (exitValue != 0) {
             throw new ScriptException("Script failed with exit code " + exitValue);
+        }
+        if (contentType != null) {
+            return captureOutput.toString().getBytes();
         }
         return exitValue;
     }
@@ -78,5 +88,16 @@ public class NativeShellScriptEngine extends AbstractScriptEngine {
     @Override
     public ScriptEngineFactory getFactory() {
         return nativeShell.getScriptEngineFactory();
+    }
+
+    private String getOutputContentType(ScriptContext scriptContext) {
+        Bindings bindings = scriptContext.getBindings(ScriptContext.ENGINE_SCOPE);
+        if (bindings != null && bindings.containsKey(SchedulerConstants.GENERIC_INFO_BINDING_NAME)) {
+            Map<String, String> genericInfo = (Map<String, String>) scriptContext.getBindings(ScriptContext.ENGINE_SCOPE)
+                                                                                 .get(SchedulerConstants.GENERIC_INFO_BINDING_NAME);
+
+            return genericInfo.get(CONTENT_TYPE);
+        }
+        return null;
     }
 }
