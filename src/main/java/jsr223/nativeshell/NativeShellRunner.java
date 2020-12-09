@@ -279,7 +279,7 @@ public class NativeShellRunner {
                 try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(processOutput));
                         BufferedWriter bufferedWriter = new BufferedWriter(contextWriter)) {
                     pipe(bufferedReader, bufferedWriter, captureOutput);
-                } catch (IOException ignored) {
+                } catch (Exception ignored) {
                 }
             }
         });
@@ -292,7 +292,7 @@ public class NativeShellRunner {
                 try (BufferedReader bufferedReader = new BufferedReader(contextWriter);
                         OutputStreamWriter outputStreamWriter = new OutputStreamWriter(processOutput)) {
                     pipe(bufferedReader, outputStreamWriter, null);
-                } catch (IOException ignored) {
+                } catch (Exception ignored) {
                 }
             }
         });
