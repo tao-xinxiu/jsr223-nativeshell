@@ -55,10 +55,16 @@ public final class IOUtils {
         char[] buff = new char[1024];
         int n = from.read(buff);
         while (n != -1) {
-            to.write(buff, 0, n);
-            to.flush();
-            if (captureOutput != null) {
-                captureOutput.append(buff, 0, n);
+            if (n > 0 && n <= 1024) {
+                try {
+                    to.write(buff, 0, n);
+                    to.flush();
+                    if (captureOutput != null) {
+                        captureOutput.append(buff, 0, n);
+                    }
+                } catch (Exception ignored) {
+
+                }
             }
             n = from.read(buff);
         }
