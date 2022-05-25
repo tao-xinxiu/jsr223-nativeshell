@@ -37,6 +37,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
+import java.io.Serializable;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -130,11 +131,14 @@ public class NativeShellRunner {
     private List<String> getArguments(ScriptContext scriptContext) {
         Bindings bindings = scriptContext.getBindings(ScriptContext.ENGINE_SCOPE);
         if (bindings != null && bindings.containsKey(Script.ARGUMENTS_NAME)) {
-            if (bindings.get(Script.ARGUMENTS_NAME) instanceof String[]) {
-                String[] arguments = (String[]) bindings.get(Script.ARGUMENTS_NAME);
+            Object argumentsObject = bindings.get(Script.ARGUMENTS_NAME);
+            if (argumentsObject instanceof String[]) {
+                String[] arguments = (String[]) argumentsObject;
                 return Arrays.asList(arguments);
-            } else {
-                // should never occur, unfortunately, we cannot log this issue
+            } else if (argumentsObject instanceof Serializable[]) {
+                Serializable[] argumentsSerializable = (Serializable[]) argumentsObject;
+                String[] arguments = Arrays.copyOf(argumentsSerializable, argumentsSerializable.length, String[].class);
+                return Arrays.asList(arguments);
             }
         }
         return new ArrayList<>();
